@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import BinaryIO, Dict, Optional, Union
 
 import torch
+
 import torio
 
 ffmpeg_ext = torio._extension.lazy_import_ffmpeg_ext()
@@ -384,6 +385,9 @@ class StreamingMediaEncoder:
             filter_desc,
         )
 
+    def add_packet_stream(self, params):
+        self._s.add_packet_stream(params)
+
     def set_metadata(self, metadata: Dict[str, str]):
         """Set file-level metadata
 
@@ -487,6 +491,9 @@ class StreamingMediaEncoder:
                    ``n / frame_rate``.
         """
         self._s.write_video_chunk(i, chunk, pts)
+
+    def write_packet(self, packet):
+        self._s.write_packet(packet)
 
     def flush(self):
         """Flush the frames from encoders and write the frames to the destination."""

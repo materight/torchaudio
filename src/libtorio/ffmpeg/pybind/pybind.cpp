@@ -277,6 +277,28 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
   py::class_<Chunk>(m, "Chunk", py::module_local())
       .def_readwrite("frames", &Chunk::frames)
       .def_readwrite("pts", &Chunk::pts);
+  py::class_<AVRational>(m, "AVRational", py::module_local())
+      .def_readwrite("num", &AVRational::num)
+      .def_readwrite("den", &AVRational::den)
+      .def("__float__", [](const AVRational &r) -> double { return av_q2d(r); });
+  py::class_<AVPacketPtr>(m, "AVPacketPtr", py::module_local())
+      .def_property(
+          "pts",
+          [](const AVPacketPtr &p) -> int64_t { return p->pts; },
+          [](const AVPacketPtr &p, int64_t val) -> int64_t { p->pts = val; }
+      )
+      .def_property(
+          "dts",
+          [](const AVPacketPtr &p) -> int64_t { return p->dts; },
+          [](const AVPacketPtr &p, int64_t val) -> int64_t { p->dts = val; }
+      )
+      .def_property(
+          "duration",
+          [](const AVPacketPtr &p) -> int64_t { return p->duration; },
+          [](const AVPacketPtr &p, int64_t val) -> int64_t { p->duration = val; }
+      );
+  py::class_<StreamParams>(m, "StreamParams", py::module_local())
+      .def_readonly("time_base", &StreamParams::time_base);
   py::class_<CodecConfig>(m, "CodecConfig", py::module_local())
       .def(py::init<int, int, const std::optional<int>&, int, int>());
   py::class_<StreamingMediaEncoder>(
@@ -285,10 +307,12 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
       .def("set_metadata", &StreamingMediaEncoder::set_metadata)
       .def("add_audio_stream", &StreamingMediaEncoder::add_audio_stream)
       .def("add_video_stream", &StreamingMediaEncoder::add_video_stream)
+      .def("add_packet_stream", &StreamingMediaEncoder::add_packet_stream)
       .def("dump_format", &StreamingMediaEncoder::dump_format)
       .def("open", &StreamingMediaEncoder::open)
       .def("write_audio_chunk", &StreamingMediaEncoder::write_audio_chunk)
       .def("write_video_chunk", &StreamingMediaEncoder::write_video_chunk)
+      .def("write_packet", &StreamingMediaEncoder::write_packet)
       .def("flush", &StreamingMediaEncoder::flush)
       .def("close", &StreamingMediaEncoder::close);
   py::class_<StreamingMediaEncoderFileObj>(
@@ -297,12 +321,14 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
       .def("set_metadata", &StreamingMediaEncoderFileObj::set_metadata)
       .def("add_audio_stream", &StreamingMediaEncoderFileObj::add_audio_stream)
       .def("add_video_stream", &StreamingMediaEncoderFileObj::add_video_stream)
+      .def("add_packet_stream", &StreamingMediaEncoderFileObj::add_packet_stream)
       .def("dump_format", &StreamingMediaEncoderFileObj::dump_format)
       .def("open", &StreamingMediaEncoderFileObj::open)
       .def(
           "write_audio_chunk", &StreamingMediaEncoderFileObj::write_audio_chunk)
       .def(
           "write_video_chunk", &StreamingMediaEncoderFileObj::write_video_chunk)
+      .def("write_packet", &StreamingMediaEncoderFileObj::write_packet)
       .def("flush", &StreamingMediaEncoderFileObj::flush)
       .def("close", &StreamingMediaEncoderFileObj::close);
   py::class_<OutputStreamInfo>(m, "OutputStreamInfo", py::module_local())
@@ -377,11 +403,13 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
           "find_best_video_stream",
           &StreamingMediaDecoder::find_best_video_stream)
       .def("get_metadata", &StreamingMediaDecoder::get_metadata)
+      .def("get_src_stream_params", &StreamingMediaDecoder::get_src_stream_params)
       .def("get_src_stream_info", &StreamingMediaDecoder::get_src_stream_info)
       .def("get_out_stream_info", &StreamingMediaDecoder::get_out_stream_info)
       .def("seek", &StreamingMediaDecoder::seek)
       .def("add_audio_stream", &StreamingMediaDecoder::add_audio_stream)
       .def("add_video_stream", &StreamingMediaDecoder::add_video_stream)
+      .def("add_packet_stream", &StreamingMediaDecoder::add_packet_stream)
       .def("remove_stream", &StreamingMediaDecoder::remove_stream)
       .def(
           "process_packet",
@@ -390,7 +418,8 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
       .def("process_all_packets", &StreamingMediaDecoder::process_all_packets)
       .def("fill_buffer", &StreamingMediaDecoder::fill_buffer)
       .def("is_buffer_ready", &StreamingMediaDecoder::is_buffer_ready)
-      .def("pop_chunks", &StreamingMediaDecoder::pop_chunks);
+      .def("pop_chunks", &StreamingMediaDecoder::pop_chunks)
+      .def("pop_packets", &StreamingMediaDecoder::pop_packets);
   py::class_<StreamingMediaDecoderFileObj>(
       m, "StreamingMediaDecoderFileObj", py::module_local())
       .def(py::init<
@@ -416,6 +445,7 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
       .def("seek", &StreamingMediaDecoderFileObj::seek)
       .def("add_audio_stream", &StreamingMediaDecoderFileObj::add_audio_stream)
       .def("add_video_stream", &StreamingMediaDecoderFileObj::add_video_stream)
+      .def("add_packet_stream", &StreamingMediaDecoderFileObj::add_packet_stream)
       .def("remove_stream", &StreamingMediaDecoderFileObj::remove_stream)
       .def(
           "process_packet",
@@ -426,7 +456,8 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
           &StreamingMediaDecoderFileObj::process_all_packets)
       .def("fill_buffer", &StreamingMediaDecoderFileObj::fill_buffer)
       .def("is_buffer_ready", &StreamingMediaDecoderFileObj::is_buffer_ready)
-      .def("pop_chunks", &StreamingMediaDecoderFileObj::pop_chunks);
+      .def("pop_chunks", &StreamingMediaDecoderFileObj::pop_chunks)
+      .def("pop_packets", &StreamingMediaDecoderFileObj::pop_packets);
   py::class_<StreamingMediaDecoderBytes>(
       m, "StreamingMediaDecoderBytes", py::module_local())
       .def(py::init<
@@ -452,6 +483,7 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
       .def("seek", &StreamingMediaDecoderBytes::seek)
       .def("add_audio_stream", &StreamingMediaDecoderBytes::add_audio_stream)
       .def("add_video_stream", &StreamingMediaDecoderBytes::add_video_stream)
+      .def("add_packet_stream", &StreamingMediaDecoderBytes::add_packet_stream)
       .def("remove_stream", &StreamingMediaDecoderBytes::remove_stream)
       .def(
           "process_packet",
@@ -462,7 +494,8 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
           &StreamingMediaDecoderBytes::process_all_packets)
       .def("fill_buffer", &StreamingMediaDecoderBytes::fill_buffer)
       .def("is_buffer_ready", &StreamingMediaDecoderBytes::is_buffer_ready)
-      .def("pop_chunks", &StreamingMediaDecoderBytes::pop_chunks);
+      .def("pop_chunks", &StreamingMediaDecoderBytes::pop_chunks)
+      .def("pop_packets", &StreamingMediaDecoderBytes::pop_packets);
 }
 
 } // namespace

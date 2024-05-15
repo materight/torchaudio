@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import BinaryIO, Dict, Iterator, Optional, Tuple, TypeVar, Union
 
 import torch
-import torio
 from torch.utils._pytree import tree_map
+
+import torio
 
 ffmpeg_ext = torio._extension.lazy_import_ffmpeg_ext()
 
@@ -570,6 +571,9 @@ class StreamingMediaDecoder:
         """
         return self._be.get_metadata()
 
+    def get_src_stream_params(self, i: int):
+        return self._be.get_src_stream_params(i)
+
     def get_src_stream_info(self, i: int) -> InputStreamTypes:
         """Get the metadata of source stream
 
@@ -829,6 +833,9 @@ class StreamingMediaDecoder:
             hw_accel,
         )
 
+    def add_packet_stream(self, i: int):
+        self._be.add_packet_stream(i)
+
     def remove_stream(self, i: int):
         """Remove an output stream.
 
@@ -919,6 +926,9 @@ class StreamingMediaDecoder:
             else:
                 ret.append(ChunkTensor(chunk.frames, chunk.pts))
         return ret
+
+    def pop_packets(self):
+        return self._be.pop_packets()
 
     def fill_buffer(self, timeout: Optional[float] = None, backoff: float = 10.0) -> int:
         """Keep processing packets until all buffers have at least one chunk
