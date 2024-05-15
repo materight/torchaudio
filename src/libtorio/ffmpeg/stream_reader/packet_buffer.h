@@ -7,6 +7,7 @@ class PacketBuffer {
  public:
   void push_packet(AVPacket* packet);
   std::vector<AVPacketPtr> pop_packets();
+  std::optional<AVPacketPtr> pop_packet();
   bool has_packets();
 
  private:

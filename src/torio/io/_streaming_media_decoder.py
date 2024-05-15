@@ -930,6 +930,9 @@ class StreamingMediaDecoder:
     def pop_packets(self):
         return self._be.pop_packets()
 
+    def pop_packet(self):
+        return self._be.pop_packet()
+
     def fill_buffer(self, timeout: Optional[float] = None, backoff: float = 10.0) -> int:
         """Keep processing packets until all buffers have at least one chunk
 

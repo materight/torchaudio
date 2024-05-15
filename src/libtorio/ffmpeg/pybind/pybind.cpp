@@ -284,18 +284,23 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
   py::class_<AVPacketPtr>(m, "AVPacketPtr", py::module_local())
       .def_property(
           "pts",
-          [](const AVPacketPtr &p) -> int64_t { return p->pts; },
-          [](const AVPacketPtr &p, int64_t val) -> int64_t { p->pts = val; }
+          [](const AVPacketPtr &p) -> std::optional<int64_t> { return p-> pts != AV_NOPTS_VALUE ? std::optional<int64_t>(p->pts) : std::nullopt; },
+          [](const AVPacketPtr &p, std::optional<int64_t> val) { p->pts = val.value_or(AV_NOPTS_VALUE); }
       )
       .def_property(
           "dts",
-          [](const AVPacketPtr &p) -> int64_t { return p->dts; },
-          [](const AVPacketPtr &p, int64_t val) -> int64_t { p->dts = val; }
+          [](const AVPacketPtr &p) -> std::optional<int64_t> { return p-> dts != AV_NOPTS_VALUE ? std::optional<int64_t>(p->dts) : std::nullopt; },
+          [](const AVPacketPtr &p, std::optional<int64_t> val) { p->dts = val.value_or(AV_NOPTS_VALUE); }
       )
       .def_property(
           "duration",
           [](const AVPacketPtr &p) -> int64_t { return p->duration; },
-          [](const AVPacketPtr &p, int64_t val) -> int64_t { p->duration = val; }
+          [](const AVPacketPtr &p, int64_t val) { p->duration = val; }
+      )
+      .def_property_readonly("size", [](const AVPacketPtr &p) -> int { return p->size; })
+      .def_property_readonly(
+          "is_keyframe",
+          [](const AVPacketPtr &p) -> bool { return p->flags & AV_PKT_FLAG_KEY; }
       );
   py::class_<StreamParams>(m, "StreamParams", py::module_local())
       .def_readonly("time_base", &StreamParams::time_base);
@@ -419,7 +424,8 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
       .def("fill_buffer", &StreamingMediaDecoder::fill_buffer)
       .def("is_buffer_ready", &StreamingMediaDecoder::is_buffer_ready)
       .def("pop_chunks", &StreamingMediaDecoder::pop_chunks)
-      .def("pop_packets", &StreamingMediaDecoder::pop_packets);
+      .def("pop_packets", &StreamingMediaDecoder::pop_packets)
+      .def("pop_packet", &StreamingMediaDecoder::pop_packet);
   py::class_<StreamingMediaDecoderFileObj>(
       m, "StreamingMediaDecoderFileObj", py::module_local())
       .def(py::init<
@@ -457,7 +463,8 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
       .def("fill_buffer", &StreamingMediaDecoderFileObj::fill_buffer)
       .def("is_buffer_ready", &StreamingMediaDecoderFileObj::is_buffer_ready)
       .def("pop_chunks", &StreamingMediaDecoderFileObj::pop_chunks)
-      .def("pop_packets", &StreamingMediaDecoderFileObj::pop_packets);
+      .def("pop_packets", &StreamingMediaDecoderFileObj::pop_packets)
+      .def("pop_packet", &StreamingMediaDecoderFileObj::pop_packet);
   py::class_<StreamingMediaDecoderBytes>(
       m, "StreamingMediaDecoderBytes", py::module_local())
       .def(py::init<
@@ -495,7 +502,8 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
       .def("fill_buffer", &StreamingMediaDecoderBytes::fill_buffer)
       .def("is_buffer_ready", &StreamingMediaDecoderBytes::is_buffer_ready)
       .def("pop_chunks", &StreamingMediaDecoderBytes::pop_chunks)
-      .def("pop_packets", &StreamingMediaDecoderBytes::pop_packets);
+      .def("pop_packets", &StreamingMediaDecoderBytes::pop_packets)
+      .def("pop_packet", &StreamingMediaDecoderBytes::pop_packet);;
 }
 
 } // namespace

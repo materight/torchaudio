@@ -14,6 +14,14 @@ std::vector<AVPacketPtr> PacketBuffer::pop_packets() {
   packets.clear();
   return ret;
 }
+std::optional<AVPacketPtr> PacketBuffer::pop_packet() {
+  if (packets.empty()) {
+    return std::nullopt;
+  }
+  AVPacketPtr ret = std::move(packets.front());
+  packets.pop_front();
+  return ret;
+}
 bool PacketBuffer::has_packets() {
   return packets.size() > 0;
 }

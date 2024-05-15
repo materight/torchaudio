@@ -569,6 +569,10 @@ std::vector<AVPacketPtr> StreamingMediaDecoder::pop_packets() {
   return packet_buffer->pop_packets();
 }
 
+std::optional<AVPacketPtr> StreamingMediaDecoder::pop_packet() {
+  return packet_buffer->pop_packet();
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // StreamingMediaDecoderCustomIO
 //////////////////////////////////////////////////////////////////////////////

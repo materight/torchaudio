@@ -338,6 +338,12 @@ class StreamingMediaDecoder {
   std::vector<AVPacketPtr> pop_packets();
   /// @endcond
   ///@}
+
+  /// @cond
+  /// Pop one packet from buffer, if available.
+  std::optional<AVPacketPtr> pop_packet();
+  /// @endcond
+  ///@}
 };
 
 //////////////////////////////////////////////////////////////////////////////
