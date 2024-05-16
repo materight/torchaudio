@@ -392,7 +392,9 @@ PYBIND11_MODULE(TORIO_FFMPEG_EXT_NAME, m) {
       .def_readonly("num_channels", &SrcStreamInfo::num_channels)
       .def_readonly("width", &SrcStreamInfo::width)
       .def_readonly("height", &SrcStreamInfo::height)
-      .def_readonly("frame_rate", &SrcStreamInfo::frame_rate);
+      .def_readonly("frame_rate", &SrcStreamInfo::frame_rate)
+      .def_readonly("avg_frame_rate", &SrcStreamInfo::avg_frame_rate)
+      .def_readonly("duration", &SrcStreamInfo::duration);
   py::class_<StreamingMediaDecoder>(
       m, "StreamingMediaDecoder", py::module_local())
       .def(py::init<

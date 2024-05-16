@@ -94,6 +94,13 @@ struct SrcStreamInfo {
 
   /// Frame rate
   double frame_rate = 0;
+
+  /// Average frame rate
+  double avg_frame_rate = 0;
+
+  /// Duration
+  double duration = 0;
+
   ///@}
 };
 

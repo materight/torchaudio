@@ -106,6 +106,10 @@ class SourceVideoStream(SourceStream):
     """Height of the video frame in pixel."""
     frame_rate: float
     """Frame rate."""
+    avg_frame_rate: float
+    """Average frame rate."""
+    duration: float
+    """Duration in seconds."""
 
 
 def _parse_si(i):
@@ -136,6 +140,8 @@ def _parse_si(i):
             width=i.width,
             height=i.height,
             frame_rate=i.frame_rate,
+            avg_frame_rate=i.avg_frame_rate,
+            duration=i.duration,
         )
     return SourceStream(
         media_type=i.media_type,

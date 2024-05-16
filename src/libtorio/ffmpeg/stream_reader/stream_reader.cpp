@@ -173,6 +173,10 @@ SrcStreamInfo StreamingMediaDecoder::get_src_stream_info(int i) const {
       ret.width = codecpar->width;
       ret.height = codecpar->height;
       ret.frame_rate = av_q2d(stream->r_frame_rate);
+      ret.avg_frame_rate = av_q2d(stream->avg_frame_rate);
+      if (stream->duration != AV_NOPTS_VALUE) {
+          ret.duration = double(stream->duration) * stream->time_base.num / stream->time_base.den;
+      }
       break;
     }
     default:;
